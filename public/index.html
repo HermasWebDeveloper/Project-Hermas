@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Order</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Favicon -->
+    <link rel="icon" href="/Project-Hermas-Top-logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <header class="app-header">
+        <img src="/Project-Hermas-logo.svg" alt="Company Logo" id="companyLogo" data-ai-hint="company logo">
+    </header>
+
+    <div class="container" id="mainContainer">
+        <div class="page-title-header">
+            <h1>Purchase Order</h1>
+        </div>
+
+        <h2><i class="fas fa-user-circle"></i>Customer Information</h2>
+        <div class="input-group">
+            <!-- <label for="custName">Your name</label> -->
+            <input type="text" id="custName" placeholder="Customer Name" required aria-describedby="custNameError">
+            <span id="custNameError" class="sr-only error-message"></span>
+        </div>
+         <div class="input-group">
+            <!-- <label for="custAddress">Address</label> -->
+            <input type="text" id="custAddress" placeholder="Delivery Address" required aria-describedby="custAddressError">
+            <span id="custAddressError" class="sr-only error-message"></span>
+        </div>
+         <div class="input-group">
+             <!-- <label for="custPhone">Your Whatsapp Number</label> -->
+             <input type="tel" id="custPhone" placeholder="WhatsApp Number" required aria-describedby="custPhoneError">
+             <span id="custPhoneError" class="sr-only error-message"></span>
+        </div>
+
+        <h2><i class="fas fa-pills"></i>Our Products</h2>
+        <div id="productGroups">
+            <p role="status" aria-live="polite">Loading products...</p>
+        </div>
+
+        <div class="order-summary" id="orderSummaryCard"> 
+            <div class="order-summary-header">
+                <div class="title">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Your Cart</span>
+                </div>
+                <div class="description" id="orderSummaryDescription" style="display: none;">Review items in your order.</div>
+            </div>
+            <div class="order-summary-content">
+                <div class="empty-cart-message" id="emptyCartMessage"> 
+                    <i class="fas fa-cart-plus"></i>
+                    <p>Your Cart is Empty</p>
+                    <span>Add some products to see them here.</span>
+                </div>
+                <div class="table-responsive-wrapper" id="cartTableWrapper" style="display: none;"> 
+                    <table class="cart-table-modern" aria-label="Shopping Cart Items">
+                        <thead>
+                            <tr>
+                                <th scope="col">Product</th>
+                                <th scope="col">Qty</th>
+                                <th scope="col">Unit Price</th>
+                                <th scope="col">Subtotal</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cartTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="total-section">
+            <p class="total-amount" aria-live="polite">Total: ₹<span id="totalAmount">0.00</span></p>
+            <button id="downloadExcelButton">
+                <i class="fas fa-file-excel" aria-hidden="true"></i> Download Excel Order
+            </button>
+        </div>
+    </div>
+
+    <script src="products.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

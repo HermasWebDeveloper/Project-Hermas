@@ -1,9 +1,9 @@
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
-
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+const products = require('./public/products.js'); // ✅ Load the product data directly
 
 app.use(express.json());
 app.use(express.static('public'));
@@ -13,12 +13,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/products', (req, res) => {
-  fs.readFile('./products.json', 'utf8', (err, data) => {
-    if (err) {
-      return res.status(500).json({ error: 'Failed to load products' });
-    }
-    res.json(JSON.parse(data));
-  });
+  res.json(products); // ✅ Respond with the array directly
 });
 
 app.listen(PORT, () => {

@@ -865,6 +865,15 @@
     </div>
 
     <script>
+    let products = [];
+
+    fetch('/products')
+      .then(res => res.json())
+      .then(data => {
+        products = data;
+        console.log("Loaded products:", products);
+        // 👉 You can now render the products here
+      });
 
         const addedItems = new Map();
         const productGroupsData = {}; 

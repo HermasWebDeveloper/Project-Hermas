@@ -864,13 +864,25 @@
         </div>
     </div>
 
-    <script>
-        const products = [
+<script>
+    let products = [];
 
-        ];
+    // ✅ Fetch product data from backend
+    fetch('/products')
+      .then(res => res.json())
+      .then(data => {
+        products = data;
+        renderProducts();         // ✅ Build UI with fetched products
+        updateOrderSummary();    // ✅ Recalculate summary
+        updateTotal();           // ✅ Recalculate total
+      })
+      .catch(error => {
+        console.error('Failed to fetch products:', error);
+        showToast('Failed to load products. Please try again.', 'error');
+      });
 
-        const addedItems = new Map();
-        const productGroupsData = {}; 
+    const addedItems = new Map();
+    const productGroupsData = {};
 
         const mainContainer = document.getElementById('mainContainer');
         const orderSummaryCard = document.getElementById('orderSummaryCard');

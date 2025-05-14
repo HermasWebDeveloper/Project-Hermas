@@ -3,20 +3,20 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Load product data from JS file
+// ✅ Load product data directly from products.js
 const products = require('./public/products.js');
 
 app.use(express.json());
 
-// Serve frontend files from /public folder
+// ✅ Serve static files (your HTML, CSS, etc.)
 app.use(express.static('public'));
 
-// Homepage route (serves index.html)
+// ✅ Homepage
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// API route to get all products
+// ✅ API route to return product list
 app.get('/products', (req, res) => {
   res.json(products);
 });

@@ -18,6 +18,7 @@
             --heading-color: var(--primary-color);
             --border-color: #e0e0e0;
             --input-border-color: #cfd8dc;
+            /* --background-color: #f0f4f4; */ /* Background removed as requested */
             --card-background-color: #ffffff;
             --card-header-background: #f8f9fa;
             --error-color: #e53935; 
@@ -37,10 +38,11 @@
 
         body {
             font-family: 'Poppins', sans-serif;
+            /* background-color: var(--background-color); */ /* Background removed */
             background-attachment: fixed;
             color: var(--text-color);
             line-height: 1.6;
-            /* padding: 20px; Adjusted by #pageWrapper */
+            padding: 20px;
             display: flex;
             flex-direction: column; /* Allow logo and container to stack */
             align-items: center; /* Center content horizontally */
@@ -112,7 +114,7 @@
         }
 
 
-        h2 { /* Applies to "Customer Information", "Our Products", etc. */
+        h2 {
             font-size: 1.3rem; 
             margin: 20px 0 15px; /* Reduced top margin for closer spacing */
             font-weight: 600;
@@ -863,17 +865,23 @@
             </div>
         </div>
     </div>
-
+    
+    <!-- Ensure product.js is loaded before this script if it defines the global 'products' variable -->
+    <!-- <script src="product.js"></script> --> 
     <script>
-    let products = [];
+        // const products = []; // This should be populated by product.js or fetched
+        // For demonstration, using the previous hardcoded list. 
+        // REMOVE THIS and ensure product.js provides the 'products' global variable.
+         const products = [
+            { group: "Syrups", name: "Arq Makho 500 ML", rate: 65 }, 
+            { group: "Syrups", name: "Arq Zeera 500 ML", rate: 70 }, 
+            { group: "Tablets", name: "Paracetamol 500 MG", rate: 2.5 },
+            { group: "Oils", name: "Herbal Hair Oil 200 ML", rate: 60 },
+            { group: "Tablets", name: "Aspirin 75 MG", rate: 1.0 },
+            { group: "Syrups", name: "Cough Syrup XYZ 100 ML", rate: 45 },
+            { group: "Oils", name: "Pain Relief Oil 50 ML", rate: 75 },
+        ];
 
-    fetch('/products')
-      .then(res => res.json())
-      .then(data => {
-        products = data;
-        console.log("Loaded products:", products);
-        // 👉 You can now render the products here
-      });
 
         const addedItems = new Map();
         const productGroupsData = {}; 
@@ -1060,7 +1068,7 @@
                 content.setAttribute('aria-hidden', 'false');
                  // Re-render products for this group to apply sort and product-added-in-cart class
                 const groupName = header.querySelector('span:first-child').textContent.trim();
-                renderProductsInGroup(id, groupName);
+                renderProductsInGroup(id, groupName); // Rerender on open to ensure correct state
 
             } else {
                 group.classList.remove('open');
@@ -1134,28 +1142,26 @@
             const groupElement = btnElement.closest('.group');
             const groupId = groupElement.id;
             const currentGroupName = groupElement.querySelector('.group-header span:first-child').textContent.trim();
-            const groupShouldRemainOpen = groupElement.classList.contains('open');
+            const wasOpen = groupElement.classList.contains('open');
 
 
             if (btnElement.classList.contains('added')) { 
-                triggerShake(btnElement);
+                triggerShake(btnElement); 
                 setTimeout(() => {
                     addedItems.delete(name);
                     showToast(`${name} removed from cart.`, 'warning');
                     renderProductsInGroup(groupId, currentGroupName); 
-                    if (groupShouldRemainOpen) { // Ensure group stays open if it was open
-                        const freshGroupElement = document.getElementById(groupId);
-                         if (freshGroupElement && !freshGroupElement.classList.contains('open')) {
-                            freshGroupElement.classList.add('open');
-                            const header = freshGroupElement.querySelector('.group-header');
-                            const content = freshGroupElement.querySelector('.group-products');
-                            if (header) header.setAttribute('aria-expanded', 'true');
-                            if (content) content.setAttribute('aria-hidden', 'false');
-                        }
+                    const freshGroupElement = document.getElementById(groupId);
+                    if (freshGroupElement && wasOpen && !freshGroupElement.classList.contains('open')) {
+                        freshGroupElement.classList.add('open');
+                        const header = freshGroupElement.querySelector('.group-header');
+                        const content = freshGroupElement.querySelector('.group-products');
+                        if (header) header.setAttribute('aria-expanded', 'true');
+                        if (content) content.setAttribute('aria-hidden', 'false');
                     }
                     updateTotal();
                     updateOrderSummary();
-                }, 400);
+                }, 400); 
             } else { 
                 if (qtyString === '' || isNaN(qty) || qty <= 0) { 
                     qtyInput.classList.add('invalid');
@@ -1166,21 +1172,38 @@
                     qtyInput.focus();
                     return;
                 }
+                
                 addedItems.set(name, { name, rate, qty, group: currentGroupName });
                 showToast(`${name} added to cart!`, 'success');
-                renderProductsInGroup(groupId, currentGroupName); 
-                if (groupShouldRemainOpen) { // Ensure group stays open
-                     const freshGroupElement = document.getElementById(groupId);
-                     if (freshGroupElement && !freshGroupElement.classList.contains('open')) {
-                        freshGroupElement.classList.add('open');
-                        const header = freshGroupElement.querySelector('.group-header');
-                        const content = freshGroupElement.querySelector('.group-products');
+                
+                // Update button state immediately for responsiveness
+                btnElement.classList.add('added');
+                btnElement.innerHTML = '<i class="fas fa-trash-alt"></i> Remove';
+                qtyInput.disabled = true;
+                qtyInput.classList.add('added'); 
+                qtyInput.classList.remove('invalid'); 
+
+                updateTotal();
+                updateOrderSummary();
+
+                // Delay the re-rendering of the product list for sorting effect
+                setTimeout(() => {
+                    renderProductsInGroup(groupId, currentGroupName);
+                    const freshGroupElementAfterSort = document.getElementById(groupId);
+                    if (freshGroupElementAfterSort && wasOpen && !freshGroupElementAfterSort.classList.contains('open')) {
+                        freshGroupElementAfterSort.classList.add('open');
+                        const header = freshGroupElementAfterSort.querySelector('.group-header');
+                        const content = freshGroupElementAfterSort.querySelector('.group-products');
+                        if (header) header.setAttribute('aria-expanded', 'true');
+                        if (content) content.setAttribute('aria-hidden', 'false');
+                    } else if (freshGroupElementAfterSort && wasOpen && freshGroupElementAfterSort.classList.contains('open')) {
+                         // Ensure ARIA attributes are correct if it remained open
+                        const header = freshGroupElementAfterSort.querySelector('.group-header');
+                        const content = freshGroupElementAfterSort.querySelector('.group-products');
                         if (header) header.setAttribute('aria-expanded', 'true');
                         if (content) content.setAttribute('aria-hidden', 'false');
                     }
-                }
-                updateTotal();
-                updateOrderSummary();
+                }, 300); // 300ms delay for sorting visibility
             }
         }
         

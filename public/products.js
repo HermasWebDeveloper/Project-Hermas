@@ -74,3 +74,8 @@ const products = [
     { group: "Capsule", name: "Ziabathees Capsule 250", rate: 995 },
     { group: "Capsule", name: "Ziabathees Capsule 30", rate: 130 }
 ];
+
+module.exports = products;
+
+
+

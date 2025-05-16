@@ -1,5 +1,7 @@
+let products = [];
 const addedItems = new Map();
-const productGroupsData = {}; 
+const productGroupsData = {};
+const groupSearchQueries = {};
 
 const mainContainer = document.getElementById('mainContainer');
 const orderSummaryCard = document.getElementById('orderSummaryCard');
@@ -9,13 +11,25 @@ const cartTableWrapperElement = document.getElementById('cartTableWrapper');
 const cartTableBody = document.getElementById('cartTableBody');
 const productGroupsContainerDOM = document.getElementById('productGroups');
 const totalAmountElement = document.getElementById('totalAmount');
-const downloadExcelButton = document.getElementById('downloadExcelButton');
+const downloadAndShareButton = document.getElementById('downloadAndShareButton');
 const custNameInput = document.getElementById('custName');
 const custAddressInput = document.getElementById('custAddress');
 const custPhoneInput = document.getElementById('custPhone');
 
 const STORAGE_KEY_CART = 'purchaseOrderCart_v1';
 const STORAGE_KEY_CUSTOMER_INFO = 'purchaseOrderCustomerInfo_v1';
+
+fetch('/products')
+  .then(res => res.json())
+  .then(data => {
+    products = data;
+    renderProducts();
+    updateOrderSummary();
+    updateTotal();
+  })
+  .catch(error => {
+    showToast('Failed to load products. Please try again.', 'error');
+  });
 
 function showToast(message, type = 'info', duration = 3000) {
     const toastContainer = document.getElementById('toastContainer');
@@ -44,9 +58,15 @@ function showToast(message, type = 'info', duration = 3000) {
 function triggerShake(element) {
     if (element) {
         element.classList.add('shake-it');
+        // Use a longer, smoother transition for shake
         setTimeout(() => {
             element.classList.remove('shake-it');
-        }, 400); 
+            // Add a subtle scale "pop" after shake for smoothness
+            element.classList.add('pop-it');
+            setTimeout(() => {
+                element.classList.remove('pop-it');
+            }, 180); // pop duration
+        }, 480); // shake duration (slightly longer for smoothness)
     }
 }
 
@@ -143,9 +163,14 @@ function renderProducts() {
 
         const searchInput = groupDiv.querySelector('.group-search');
         let debounceTimer;
+        if (groupSearchQueries[groupId]) {
+            searchInput.value = groupSearchQueries[groupId];
+            filterGroup(groupId, groupSearchQueries[groupId]);
+        }
         searchInput.addEventListener('input', (event) => {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
+                groupSearchQueries[groupId] = event.target.value;
                 filterGroup(groupId, event.target.value);
             }, 300); 
         });
@@ -202,17 +227,31 @@ function filterGroup(groupId, query) {
     });
 }
 
-function renderProductsInGroup(groupId, groupName) {
+function renderProductsInGroup(groupId, groupName, filterQuery = null, keepOpen = false) {
     const groupElement = document.getElementById(groupId);
     if (!groupElement) return;
     const groupProductsContainer = groupElement.querySelector('.group-products');
-    const originalGroupProducts = getOriginalGroupProducts(groupName);
-    
-    groupProductsContainer.innerHTML = generateProductListHTML(originalGroupProducts, groupId);
-    
-    groupProductsContainer.querySelectorAll('.add-button').forEach(button => {
-         button.addEventListener('click', handleAddRemoveButtonClick);
-    });
+    const searchInput = groupElement.querySelector('.group-search');
+    let query = filterQuery;
+    if (query === null && searchInput) {
+        query = searchInput.value;
+    }
+    groupSearchQueries[groupId] = query || '';
+    if (query && query.trim() !== '') {
+        filterGroup(groupId, query);
+    } else {
+        groupProductsContainer.innerHTML = generateProductListHTML(getOriginalGroupProducts(groupName), groupId);
+        groupProductsContainer.querySelectorAll('.add-button').forEach(button => {
+            button.addEventListener('click', handleAddRemoveButtonClick);
+        });
+    }
+    if (keepOpen && !groupElement.classList.contains('open')) {
+        groupElement.classList.add('open');
+        const header = groupElement.querySelector('.group-header');
+        const content = groupElement.querySelector('.group-products');
+        if (header) header.setAttribute('aria-expanded', 'true');
+        if (content) content.setAttribute('aria-hidden', 'false');
+    }
 }
 
 function handleAddRemoveButtonClick(event) {
@@ -235,11 +274,11 @@ function toggleAdd(pid, btnElement) {
 
     const name = qtyInput.dataset.name;
     const rate = parseFloat(qtyInput.dataset.rate);
-    let qtyString = qtyInput.value.trim(); 
-    let qty = parseFloat(qtyString); 
+    let qtyString = qtyInput.value.trim();
+    let qty = parseInt(qtyString, 10);
 
     qtyInput.classList.remove('invalid');
-    const errorSpan = document.getElementById(`${pid}-qtyError`) || document.createElement('span'); 
+    const errorSpan = document.getElementById(`${pid}-qtyError`) || document.createElement('span');
     errorSpan.id = `${pid}-qtyError`;
     errorSpan.className = 'sr-only error-message';
     qtyInput.setAttribute('aria-describedby', errorSpan.id);
@@ -248,51 +287,41 @@ function toggleAdd(pid, btnElement) {
     const groupId = groupElement.id;
     const currentGroupName = groupElement.querySelector('.group-header span:first-child').textContent.trim();
     const wasOpen = groupElement.classList.contains('open');
+    const filterQuery = groupElement.querySelector('.group-search')?.value || '';
 
-
-    if (btnElement.classList.contains('added')) { 
-        triggerShake(btnElement); 
+    if (btnElement.classList.contains('added')) {
+        triggerShake(btnElement);
         setTimeout(() => {
             addedItems.delete(name);
             showToast(`${name} removed from cart.`, 'warning');
-            renderProductsInGroup(groupId, currentGroupName); 
-            const freshGroupElement = document.getElementById(groupId);
-            if (freshGroupElement && wasOpen && !freshGroupElement.classList.contains('open')) {
-                freshGroupElement.classList.add('open');
-                const header = freshGroupElement.querySelector('.group-header');
-                const content = freshGroupElement.querySelector('.group-products');
-                if (header) header.setAttribute('aria-expanded', 'true');
-                if (content) content.setAttribute('aria-hidden', 'false');
-            }
+            renderProductsInGroup(groupId, currentGroupName, filterQuery, true);
             updateTotal();
             updateOrderSummary();
-        }, 400); 
-
-
-    } else { 
-        if (qtyString === '' || isNaN(qty) || qty <= 0) { 
+        }, 400);
+    } else {
+        // Only allow positive integers
+        if (
+            qtyString === '' ||
+            isNaN(qty) ||
+            qty <= 0 ||
+            !/^\d+$/.test(qtyString)
+        ) {
             qtyInput.classList.add('invalid');
-            qtyInput.value = ''; 
+            qtyInput.value = '';
             qtyInput.setAttribute('aria-invalid', 'true');
-            errorSpan.textContent = 'Please enter a valid quantity.';
+            errorSpan.textContent = 'Please enter a valid quantity (positive integer).';
             showToast('Please enter a valid quantity.', 'error');
             qtyInput.focus();
             return;
         }
-        addedItems.set(name, { name, rate, qty, group: currentGroupName });
-        showToast(`${name} added to cart!`, 'success');
-        renderProductsInGroup(groupId, currentGroupName); 
-        
-        const freshGroupElement = document.getElementById(groupId);
-        if (freshGroupElement && wasOpen && !freshGroupElement.classList.contains('open')) {
-             freshGroupElement.classList.add('open');
-             const header = freshGroupElement.querySelector('.group-header');
-             const content = freshGroupElement.querySelector('.group-products');
-             if (header) header.setAttribute('aria-expanded', 'true');
-             if (content) content.setAttribute('aria-hidden', 'false');
-        }
-        updateTotal();
-        updateOrderSummary();
+        triggerShake(btnElement);
+        setTimeout(() => {
+            addedItems.set(name, { name, rate, qty, group: currentGroupName });
+            showToast(`${name} added to cart!`, 'success');
+            renderProductsInGroup(groupId, currentGroupName, filterQuery, true);
+            updateTotal();
+            updateOrderSummary();
+        }, 400);
     }
 }
 
@@ -317,17 +346,8 @@ function removeItemFromCart(itemName, buttonElement) {
             if (groupElementToUpdate) { 
                 const groupId = groupElementToUpdate.id; 
                 const wasOpen = groupElementToUpdate.classList.contains('open'); 
-                
-                renderProductsInGroup(groupId, itemOriginalGroup); 
-
-                const potentiallyReRenderedGroup = document.getElementById(groupId);
-                if (potentiallyReRenderedGroup && wasOpen && !potentiallyReRenderedGroup.classList.contains('open')) {
-                    potentiallyReRenderedGroup.classList.add('open');
-                    const header = potentiallyReRenderedGroup.querySelector('.group-header');
-                    const content = potentiallyReRenderedGroup.querySelector('.group-products');
-                    if (header) header.setAttribute('aria-expanded', 'true');
-                    if (content) content.setAttribute('aria-hidden', 'false');
-                }
+                const filterQuery = groupElementToUpdate.querySelector('.group-search')?.value || '';
+                renderProductsInGroup(groupId, itemOriginalGroup, filterQuery, wasOpen); 
             }
         }
         updateTotal();
@@ -413,14 +433,13 @@ function validateCustomerInfo() {
     return isValid;
 }
 
-function downloadExcelHandler() { 
+async function downloadAndShareHandler() {
     if (!validateCustomerInfo()) {
         showToast('Please fill in all customer information correctly.', 'error');
         const firstInvalid = document.querySelector('input.invalid');
         if (firstInvalid) firstInvalid.focus();
         return;
     }
-    
     if (addedItems.size === 0) {
         showToast('Your cart is empty. Add items before downloading.', 'warning');
         return;
@@ -432,12 +451,12 @@ function downloadExcelHandler() {
 
     const rows = [
         ['PURCHASE ORDER'],
-        [''], 
+        [''],
         ['Customer Name:', name],
         ['Delivery Address:', addr],
         ['WhatsApp Number:', phone],
-        ['Order Date:', new Date().toLocaleDateString('en-GB')], 
-        [''], 
+        ['Order Date:', new Date().toLocaleDateString('en-GB')],
+        [''],
         ['Product Name', 'Quantity', 'Unit Price (₹)', 'Amount (₹)']
     ];
 
@@ -446,85 +465,36 @@ function downloadExcelHandler() {
         rows.push([item.name, item.qty, item.rate.toFixed(2), amount.toFixed(2)]);
     });
 
-    rows.push(['']); 
+    rows.push(['']);
     rows.push(['', '', 'Total:', `₹${totalAmountElement.textContent}`]);
 
     try {
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet(rows);
-
-        ws['!cols'] = [
-            { wch: 35 }, { wch: 10 }, { wch: 15 }, { wch: 15 } ];
-        
-        if(ws['A1']) {
-            ws['A1'].s = { 
-                font: { sz: 18, bold: true, color: { rgb: "006064" } }, 
-                alignment: { horizontal: "center", vertical: "center" } 
-            };
-        }
-        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }]; 
-
-        const headerRowIndex = 7; 
-        ['A', 'B', 'C', 'D'].forEach(col => {
-            const cellRef = `${col}${headerRowIndex + 1}`;
-            if(ws[cellRef]) {
-                ws[cellRef].s = { 
-                    font: { bold: true, color: {rgb: "FFFFFF"} }, 
-                    fill: { fgColor: { rgb: "008080"} }, 
-                    alignment: { horizontal: "center", vertical: "center" },
-                    border: { 
-                        top: { style: "thin", color: { rgb: "006064" } },
-                        bottom: { style: "thin", color: { rgb: "006064" } },
-                        left: { style: "thin", color: { rgb: "006064" } },
-                        right: { style: "thin", color: { rgb: "006064" } }
-                    }
-                };
-            }
-        });
-        
-        for (let i = 0; i < addedItems.size; i++) {
-            const dataRowIndex = headerRowIndex + 1 + i;
-             ['A', 'B', 'C', 'D'].forEach(col => {
-                const cellRef = `${col}${dataRowIndex + 1}`;
-                if(ws[cellRef]) {
-                     ws[cellRef].s = {
-                        border: {
-                            top: { style: "thin", color: { rgb: "B0BEC5" } }, 
-                            bottom: { style: "thin", color: { rgb: "B0BEC5" } },
-                            left: { style: "thin", color: { rgb: "B0BEC5" } },
-                            right: { style: "thin", color: { rgb: "B0BEC5" } }
-                        }
-                    };
-                    if (col === 'A') ws[cellRef].s.alignment = { horizontal: "left" };
-                    if (['B', 'C', 'D'].includes(col)) ws[cellRef].s.alignment = { horizontal: "right" };
-                }
-            });
-        }
-
-        const totalRowActualIndex = rows.length -1; 
-        if(ws[`C${totalRowActualIndex + 1}`]) { 
-            ws[`C${totalRowActualIndex + 1}`].s = { 
-                font: { bold: true, sz: 12 }, 
-                alignment: { horizontal: "right" },
-                border: { top: { style: "medium", color: { rgb: "006064"}} } 
-            };
-        }
-        if(ws[`D${totalRowActualIndex + 1}`]) { 
-            ws[`D${totalRowActualIndex + 1}`].s = { 
-                font: { bold: true, sz: 12, color: {rgb: "008080"} }, 
-                alignment: { horizontal: "right" },
-                border: { top: { style: "medium", color: { rgb: "006064"}} }
-            };
-        }
-
-        XLSX.utils.book_append_sheet(wb, ws, 'OrderDetails'); 
+        XLSX.utils.book_append_sheet(wb, ws, 'OrderDetails');
         const safeCustomerName = name.replace(/[^a-z0-9]/gi, '_') || 'Customer';
-        const fileName = `Purchase_Order_${safeCustomerName}_${new Date().toISOString().split('T')[0]}.xlsx`; 
+        const fileName = `Purchase_Order_${safeCustomerName}_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+        // Download Excel
         XLSX.writeFile(wb, fileName);
         showToast('Order downloaded successfully as Excel!', 'success');
+
+        // Share if supported
+        if (navigator.canShare && navigator.canShare({ files: [] })) {
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const file = new File([wbout], fileName, { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+            await navigator.share({
+                title: 'Purchase Order',
+                text: 'Here is my purchase order.',
+                files: [file]
+            });
+            showToast('Order shared successfully!', 'success');
+        } else {
+            showToast('Sharing is not supported on this device/browser.', 'warning');
+        }
     } catch (error) {
-        console.error("Error generating Excel file:", error);
-        showToast('Failed to download Excel. Please try again.', 'error');
+        console.error("Error generating or sharing Excel file:", error);
+        showToast('Failed to download or share Excel. Please try again.', 'error');
     }
 }
 
@@ -582,10 +552,32 @@ function loadState() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (downloadExcelButton) {
-        downloadExcelButton.addEventListener('click', downloadExcelHandler);
-    }
+    // Prevent decimal and negative in quantity inputs
+    productGroupsContainerDOM.addEventListener('input', function (e) {
+        if (e.target.classList.contains('qty-input')) {
+            let val = e.target.value;
+            // Remove non-digit characters and leading zeros, allow only positive integers
+            val = val.replace(/[^0-9]/g, '');
+            if (val.startsWith('0')) val = val.replace(/^0+/, '');
+            e.target.value = val;
+        }
+    });
 
+    // WhatsApp Number: only digits allowed
+    custPhoneInput.addEventListener('input', function (e) {
+        let val = e.target.value.replace(/\D/g, '');
+        e.target.value = val;
+    });
+
+    // Customer Name: allow alphabets, spaces, and common symbols (.,-()[])
+    custNameInput.addEventListener('input', function (e) {
+        let val = e.target.value.replace(/[^a-zA-Z\s.,\-()\[\]]/g, '');
+        e.target.value = val;
+    });
+
+    if (downloadAndShareButton) {
+        downloadAndShareButton.addEventListener('click', downloadAndShareHandler);
+    }
     loadState(); 
     renderProducts(); 
     updateOrderSummary(); 

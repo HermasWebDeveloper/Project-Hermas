@@ -24,8 +24,29 @@
             padding: 0;
         }
 
+        body,
+        input,
+        button,
+        select,
+        textarea,
+        table,
+        th,
+        td,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        label,
+        span,
+        div,
+        p,
+        a {
+            font-family: 'Poppins', sans-serif !important;
+        }
+
         body {
-            font-family: 'Poppins', sans-serif;
             /* background-color: var(--background-color); */ /* Background removed */
             background-attachment: fixed;
             color: var(--text-color);
@@ -62,6 +83,7 @@
             border-radius: 12px; 
             box-shadow: var(--shadow);
             padding: 25px; 
+            padding-top: 0; /* Remove top padding so header and container connect */
             display: flex;
             flex-direction: column;
             width: 100%;
@@ -78,11 +100,23 @@
         }
         .page-title-header {
             text-align: center;
-            margin-bottom: 25px;
-            padding: 10px 0;
-            background-color: var(--secondary-color); /* Light teal background for the box */
-            border-radius: 8px; /* Rounded corners for the box */
-            /* border: 1px solid var(--border-color); Optional: if a border is desired */
+            margin-bottom: 0; /* Remove bottom margin to connect with next section */
+            padding: 18px 0;
+            background-color: var(--primary-color); /* Main theme color */
+            border-radius: 8px 8px 0 0; /* Only round top corners */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            /* Connect both left and right ends to the container */
+            margin-left: -25px;
+            margin-right: -25px;
+            width: calc(100% + 50px);
+            /* If you ever change .container padding, adjust these values accordingly */
+        }
+        .page-title-header h1 {
+            color: #fff;
+            font-size: 2.1rem;
+            font-weight: 700;
+            margin-bottom: 0;
+            letter-spacing: 1px;
         }
 
         h1 {
@@ -558,6 +592,35 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
+        #downloadAndShareButton {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1.05rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            align-self: center;
+            box-shadow: var(--button-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            white-space: nowrap;
+        }
+        #downloadAndShareButton:hover {
+            background-color: var(--primary-dark-color);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+        #downloadAndShareButton:active {
+            transform: translateY(0px);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
         .toast-container {
             position: fixed;
             top: 20px;
@@ -616,13 +679,24 @@
 
         @keyframes shakeElement {
             0%, 100% { transform: translateX(0); }
-            25%, 75% { transform: translateX(-3px); }
-            50% { transform: translateX(3px); }
+            15% { transform: translateX(-5px); }
+            30% { transform: translateX(5px); }
+            45% { transform: translateX(-4px); }
+            60% { transform: translateX(4px); }
+            75% { transform: translateX(-2px); }
+            90% { transform: translateX(2px); }
         }
         .shake-it {
-            animation: shakeElement 0.4s ease-in-out;
+            animation: shakeElement 0.48s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
+        @keyframes popElement {
+            0% { transform: scale(1);}
+            50% { transform: scale(1.08);}
+            100% { transform: scale(1);}
+        }
+        .pop-it {
+            animation: popElement 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
         @media (min-width: 600px) { 
             .product .product-name { flex-basis: auto; flex-grow: 1; }

@@ -3,8 +3,8 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ✅ Load product data directly from products.js
-const products = require('./public/products.js');
+// ✅ Load product data directly from products.js (should be CommonJS, not window.products)
+const products = require('./public/products.js'); // products.js must use module.exports
 
 app.use(express.json());
 

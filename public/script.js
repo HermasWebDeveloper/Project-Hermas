@@ -37,7 +37,7 @@ function showToast(message, type = 'info', duration = 3000) {
     const toast = document.createElement('div');
     toast.classList.add('toast', type);
     toast.setAttribute('role', 'alert');
-
+    
     let iconClass = 'fas fa-info-circle';
     if (type === 'success') iconClass = 'fas fa-check-circle';
     else if (type === 'error') iconClass = 'fas fa-times-circle';
@@ -45,9 +45,9 @@ function showToast(message, type = 'info', duration = 3000) {
 
     toast.innerHTML = `<i class="${iconClass}" aria-hidden="true"></i><span>${message}</span>`;
     toastContainer.appendChild(toast);
-    // Animate in
-    requestAnimationFrame(() => toast.classList.add('show'));
-
+    void toast.offsetWidth; 
+    toast.classList.add('show');
+    
     setTimeout(() => {
         toast.classList.remove('show');
         toast.classList.add('hide');
@@ -361,12 +361,6 @@ function updateTotal() {
     addedItems.forEach(item => {
         total += item.qty * item.rate;
     });
-    // Animate pop on total change
-    if (totalAmountElement.textContent !== total.toFixed(2)) {
-        totalAmountElement.classList.remove('pop-it');
-        void totalAmountElement.offsetWidth;
-        totalAmountElement.classList.add('pop-it');
-    }
     totalAmountElement.textContent = total.toFixed(2);
 }
 
@@ -481,52 +475,26 @@ async function downloadAndShareHandler() {
         const safeCustomerName = name.replace(/[^a-z0-9]/gi, '_') || 'Customer';
         const fileName = `Purchase_Order_${safeCustomerName}_${new Date().toISOString().split('T')[0]}.xlsx`;
 
-        // Create file blob for sharing
-        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-        const fileBlob = new Blob([wbout], { 
-            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
-        });
-        const file = new File([fileBlob], fileName, { 
-            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        });
+        // Download Excel
+        XLSX.writeFile(wb, fileName);
+        showToast('Order downloaded successfully as Excel!', 'success');
 
-        // First try sharing
-        try {
-            if (navigator.share && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    files: [file],
-                    title: 'Purchase Order',
-                    text: 'Here is my purchase order.'
-                });
-                showToast('Order shared successfully!', 'success');
-            } else {
-                // If sharing not supported, download the file
-                downloadFile();
-                showToast('Downloading Excel file (sharing not supported on this device)', 'info', 3000);
-            }
-        } catch (shareError) {
-            console.log('Share failed:', shareError);
-            // If sharing fails, fallback to download
-            downloadFile();
-            showToast('Downloading Excel file instead', 'info', 3000);
+        // Share if supported
+        if (navigator.canShare && navigator.canShare({ files: [] })) {
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const file = new File([wbout], fileName, { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+            await navigator.share({
+                title: 'Purchase Order',
+                text: 'Here is my purchase order.',
+                files: [file]
+            });
+            showToast('Order shared successfully!', 'success');
+        } else {
+            showToast('Sharing is not supported on this device/browser.', 'warning');
         }
-
-        function downloadFile() {
-            const url = URL.createObjectURL(fileBlob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => {
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }, 100);
-        }
-
     } catch (error) {
-        console.error("Error:", error);
-        showToast('Failed to process the order. Please try again.', 'error');
+        console.error("Error generating or sharing Excel file:", error);
+        showToast('Failed to download or share Excel. Please try again.', 'error');
     }
 }
 

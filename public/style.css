@@ -411,20 +411,21 @@
 
 
         .total-section {
-            margin-top: 30px;
-            padding-top: 20px;
+            margin-top: 20px; /* Reduced from 30px */
+            padding-top: 15px; /* Reduced from 20px */
             border-top: 2px solid var(--secondary-color); 
             text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
+            gap: 12px; /* Added to control space between total and button */
         }
 
         .total-amount {
             font-size: 1.8rem; 
             font-weight: 700; 
             color: var(--primary-color);
-            margin-bottom: 18px; 
+            margin-bottom: 0; /* Removed margin bottom */
         }
 
         .order-summary {
@@ -628,7 +629,7 @@
             font-size: 1.05rem;
             font-weight: 600;
             cursor: pointer;
-            margin-top: 15px;
+            margin-top: 0; /* Removed margin top */
             transition: background var(--transition), box-shadow var(--transition), transform var(--transition), color var(--transition);
             align-self: center;
             box-shadow: var(--button-shadow);
@@ -758,25 +759,37 @@
                 width: 100vw;
                 overflow-x: hidden;
                 background: #fff;
+                /* Prevent endless scroll by using min/max height and flex layout */
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                justify-content: flex-start;
+                height: 100dvh;
+                max-height: 100dvh;
             }
             .app-header {
-                max-width: 100%;
+                max-width: 100vw;
                 padding-left: 0;
                 padding-right: 0;
             }
             .container {
-                width: 100vw;
-                min-width: 100vw;
+                width: 96vw;
+                min-width: 0;
                 max-width: 100vw;
-                padding: 0 0 15px 0;
+                padding: 0 2vw 15px 2vw;
                 border-radius: 0;
                 box-shadow: none;
-                margin: 0;
+                margin: 0 auto;
+                /* Prevent container from being taller than viewport */
+                max-height: calc(100dvh - 10px);
+                overflow-y: auto;
+                display: flex;
+                flex-direction: column;
             }
             .page-title-header {
                 margin-left: 0;
                 margin-right: 0;
-                width: 100vw;
+                width: 100%;
                 border-radius: 0 0 0 0;
                 max-width: 100vw;
             }

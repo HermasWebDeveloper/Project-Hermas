@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Purchase Order</title>
-    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Favicon -->
@@ -14,14 +13,13 @@
 <body>
     <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 
-    <header class="app-header">
-        <img src="/Project-Hermas-logo.svg" alt="Company Logo" id="companyLogo">
-    </header>
+    <!-- Logo centered above the container -->
+    <div class="app-header">
+        <img src="Project-Hermas-logo.svg" alt="Hermas Logo" id="companyLogo">
+    </div>
 
     <div class="container" id="mainContainer">
-        <div class="page-title-header">
-            <h1>Purchase Order</h1>
-        </div>
+        <h1>Purchase Order</h1>
 
         <h2><i class="fas fa-user-circle"></i>Customer Information</h2>
         <div class="input-group">
@@ -76,14 +74,18 @@
 
         <div class="total-section">
             <p class="total-amount" aria-live="polite">Total: ₹<span id="totalAmount">0.00</span></p>
-            <button id="downloadAndShareButton">
+            <button id="downloadExcelButton">
                 <i class="fas fa-file-excel" aria-hidden="true"></i>
-                <i class="fas fa-share-alt" aria-hidden="true" style="margin-left:6px;"></i>
-                Download Excel Order and Share
+                Download Excel Order
             </button>
         </div>
     </div>
 
+    <!-- Load main script -->
     <script src="script.js"></script>
+    <script>
+        // Debug check
+        console.log('XLSX loaded:', !!window.XLSX);
+    </script>
 </body>
 </html>

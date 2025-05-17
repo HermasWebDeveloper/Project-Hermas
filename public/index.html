@@ -11,15 +11,15 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
-
-    <!-- Logo centered above the container -->
+    <!-- Logo section with flexible controls -->
     <div class="app-header">
         <img src="Project-Hermas-logo.svg" alt="Hermas Logo" id="companyLogo">
     </div>
 
     <div class="container" id="mainContainer">
-        <h1>Purchase Order</h1>
+        <div class="purchase-order-headbox">
+            <h1>Purchase Order</h1>
+        </div>
 
         <h2><i class="fas fa-user-circle"></i>Customer Information</h2>
         <div class="input-group">
@@ -74,18 +74,50 @@
 
         <div class="total-section">
             <p class="total-amount" aria-live="polite">Total: ₹<span id="totalAmount">0.00</span></p>
-            <button id="downloadExcelButton">
-                <i class="fas fa-file-excel" aria-hidden="true"></i>
-                Download Excel Order
-            </button>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                <button id="downloadExcelButton">
+                    <i class="fas fa-file-excel" aria-hidden="true" style="margin-right:4px;"></i>
+                    <span style="display: inline-block; vertical-align: middle;">Download Excel Order</span>
+                </button>
+                <button id="clear-btn">
+                    <i class="fas fa-trash-alt" aria-hidden="true" style="margin-right:4px;"></i>
+                    <span style="display: inline-block; vertical-align: middle;">Clear all</span>
+                </button>
+            </div>
         </div>
     </div>
 
     <!-- Load main script -->
     <script src="script.js"></script>
+    <!-- Remove or comment out the following block unless you add the controls -->
+    <!--
     <script>
         // Debug check
         console.log('XLSX loaded:', !!window.XLSX);
+
+        // --- Headbox width controls ---
+        (function() {
+            const headbox = document.querySelector('.purchase-order-headbox');
+            // Read initial width from CSS variable
+            function getInitialWidth() {
+                const cssWidth = getComputedStyle(headbox).width;
+                const container = document.getElementById('mainContainer');
+                if (container) {
+                    const percent = (parseFloat(cssWidth) / container.offsetWidth) * 100;
+                    return Math.round(percent);
+                }
+                return 100;
+            }
+            let width = getInitialWidth();
+            function setWidth(w) {
+                width = Math.max(60, Math.min(100, w));
+                headbox.style.width = width + '%';
+            }
+            document.getElementById('headboxWidthInc').onclick = () => setWidth(width + 5);
+            document.getElementById('headboxWidthDec').onclick = () => setWidth(width - 5);
+            headbox.ondblclick = () => setWidth(100);
+        })();
     </script>
+    -->
 </body>
 </html>

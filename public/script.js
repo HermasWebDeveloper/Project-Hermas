@@ -32,22 +32,25 @@ fetch('/products')
   });
 
 function showToast(message, type = 'info', duration = 3000) {
-    const toastContainer = document.getElementById('toastContainer');
-    if (!toastContainer) return;
+    let toastContainer = document.getElementById('toastContainer');
+    // Dynamically create toastContainer if missing
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.className = 'toast-container';
+        document.body.appendChild(toastContainer);
+    }
     const toast = document.createElement('div');
     toast.classList.add('toast', type);
     toast.setAttribute('role', 'alert');
-    
     let iconClass = 'fas fa-info-circle';
     if (type === 'success') iconClass = 'fas fa-check-circle';
     else if (type === 'error') iconClass = 'fas fa-times-circle';
     else if (type === 'warning') iconClass = 'fas fa-exclamation-triangle';
-
     toast.innerHTML = `<i class="${iconClass}" aria-hidden="true"></i><span>${message}</span>`;
     toastContainer.appendChild(toast);
-    void toast.offsetWidth; 
+    void toast.offsetWidth;
     toast.classList.add('show');
-    
     setTimeout(() => {
         toast.classList.remove('show');
         toast.classList.add('hide');
@@ -578,6 +581,45 @@ document.addEventListener('DOMContentLoaded', () => {
     if (downloadExcelButton) {
         downloadExcelButton.addEventListener('click', downloadExcelHandler);
     }
+
+    // Clear all button logic
+    const clearBtn = document.getElementById('clear-btn');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+            // Animate icon (trash)
+            const icon = clearBtn.querySelector('i');
+            if (icon) {
+                icon.style.transform = 'rotate(-15deg) scale(1.2)';
+                setTimeout(() => { icon.style.transform = 'rotate(0deg) scale(1)'; }, 350);
+            }
+
+            // Clear browser storage
+            localStorage.clear();
+            sessionStorage.clear();
+
+            // Clear all input fields (customer info)
+            document.querySelectorAll('input, textarea').forEach(el => {
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                    el.checked = false;
+                } else {
+                    el.value = '';
+                }
+            });
+
+            // Clear cart items (if you use a JS variable/array for cart)
+            if (window.cart) window.cart = [];
+            // If you have a function to re-render the cart and total, call it here
+            if (typeof renderCart === 'function') renderCart();
+            if (typeof updateTotal === 'function') updateTotal();
+
+            // Show toast message
+            showToast('Cleared! All data reset.');
+
+            // Optionally, reload the page to ensure a fresh state
+            setTimeout(() => { location.reload(); }, 900);
+        });
+    }
+
     loadState(); 
     renderProducts(); 
     updateOrderSummary(); 

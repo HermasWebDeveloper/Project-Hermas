@@ -11,7 +11,7 @@ const cartTableWrapperElement = document.getElementById('cartTableWrapper');
 const cartTableBody = document.getElementById('cartTableBody');
 const productGroupsContainerDOM = document.getElementById('productGroups');
 const totalAmountElement = document.getElementById('totalAmount');
-const downloadAndShareButton = document.getElementById('downloadAndShareButton');
+const downloadExcelButton = document.getElementById('downloadExcelButton');
 const custNameInput = document.getElementById('custName');
 const custAddressInput = document.getElementById('custAddress');
 const custPhoneInput = document.getElementById('custPhone');
@@ -433,7 +433,7 @@ function validateCustomerInfo() {
     return isValid;
 }
 
-async function downloadAndShareHandler() {
+async function downloadExcelHandler() {
     if (!validateCustomerInfo()) {
         showToast('Please fill in all customer information correctly.', 'error');
         const firstInvalid = document.querySelector('input.invalid');
@@ -445,56 +445,56 @@ async function downloadAndShareHandler() {
         return;
     }
 
-    const name = custNameInput.value.trim();
-    const addr = custAddressInput.value.trim();
-    const phone = custPhoneInput.value.trim();
-
-    const rows = [
-        ['PURCHASE ORDER'],
-        [''],
-        ['Customer Name:', name],
-        ['Delivery Address:', addr],
-        ['WhatsApp Number:', phone],
-        ['Order Date:', new Date().toLocaleDateString('en-GB')],
-        [''],
-        ['Product Name', 'Quantity', 'Unit Price (₹)', 'Amount (₹)']
-    ];
-
-    addedItems.forEach(item => {
-        const amount = item.qty * item.rate;
-        rows.push([item.name, item.qty, item.rate.toFixed(2), amount.toFixed(2)]);
-    });
-
-    rows.push(['']);
-    rows.push(['', '', 'Total:', `₹${totalAmountElement.textContent}`]);
+    // Prepare data for server
+    const customer = {
+        name: custNameInput.value.trim(),
+        address: custAddressInput.value.trim(),
+        phone: custPhoneInput.value.trim(),
+        date: new Date().toLocaleDateString('en-GB')
+    };
+    const items = Array.from(addedItems.values());
+    const total = totalAmountElement.textContent;
 
     try {
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.aoa_to_sheet(rows);
-        XLSX.utils.book_append_sheet(wb, ws, 'OrderDetails');
-        const safeCustomerName = name.replace(/[^a-z0-9]/gi, '_') || 'Customer';
-        const fileName = `Purchase_Order_${safeCustomerName}_${new Date().toISOString().split('T')[0]}.xlsx`;
+        showToast('Generating Excel, please wait...', 'info', 2000);
 
-        // Download Excel
-        XLSX.writeFile(wb, fileName);
-        showToast('Order downloaded successfully as Excel!', 'success');
+        const response = await fetch('/generate-excel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ customer, items, total })
+        });
 
-        // Share if supported
-        if (navigator.canShare && navigator.canShare({ files: [] })) {
-            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-            const file = new File([wbout], fileName, { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-            await navigator.share({
-                title: 'Purchase Order',
-                text: 'Here is my purchase order.',
-                files: [file]
-            });
-            showToast('Order shared successfully!', 'success');
-        } else {
-            showToast('Sharing is not supported on this device/browser.', 'warning');
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            const msg = data && data.error ? data.error : 'Failed to generate Excel file';
+            showToast(msg, 'error');
+            return;
         }
+
+        // Get the blob and trigger download
+        const blob = await response.blob();
+        // Get filename from Content-Disposition header if present
+        let filename = 'Purchase_Order.xlsx';
+        const disposition = response.headers.get('Content-Disposition');
+        if (disposition && disposition.includes('filename=')) {
+            const match = disposition.match(/filename="?([^"]+)"?/);
+            if (match && match[1]) {
+                filename = match[1];
+            }
+        }
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+
+        showToast('Order downloaded successfully!', 'success');
     } catch (error) {
-        console.error("Error generating or sharing Excel file:", error);
-        showToast('Failed to download or share Excel. Please try again.', 'error');
+        console.error('Excel download error:', error);
+        showToast('Failed to download Excel file', 'error');
     }
 }
 
@@ -575,8 +575,8 @@ document.addEventListener('DOMContentLoaded', () => {
         e.target.value = val;
     });
 
-    if (downloadAndShareButton) {
-        downloadAndShareButton.addEventListener('click', downloadAndShareHandler);
+    if (downloadExcelButton) {
+        downloadExcelButton.addEventListener('click', downloadExcelHandler);
     }
     loadState(); 
     renderProducts(); 

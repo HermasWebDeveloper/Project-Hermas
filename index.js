@@ -38,7 +38,8 @@ app.post('/generate-excel', async (req, res) => {
     }
 
     const workbook = new ExcelJS.Workbook();
-    const ws = workbook.addWorksheet('Invoice');
+    // Change worksheet name to 'Quotation'
+    const ws = workbook.addWorksheet('Quotation');
 
     // Set print and view properties
     ws.pageSetup = {
@@ -70,14 +71,14 @@ app.post('/generate-excel', async (req, res) => {
     let row = 1;
 
     // Company Name (Header) - taller row
-    ws.getRow(1).height = 30;
+    ws.getRow(1).height = 38; // Increased for more space
     ws.mergeCells('A1:D1');
     ws.getCell('A1').value = 'HERMAS UNANI';
     ws.getCell('A1').font = { ...headerFont, size: 18, color: { argb: 'FF008080' } };
     ws.getCell('A1').alignment = { horizontal: 'left', vertical: 'middle' };
 
     // Company Contact Info - slightly taller
-    ws.getRow(2).height = 25;
+    ws.getRow(2).height = 30; // Increased
     ws.mergeCells('A2:D2');
     ws.getCell('A2').value = 'care@hermas.in | +91 8129 351 352 | www.hermasunani.com';
     ws.getCell('A2').font = lightFont;
@@ -85,15 +86,16 @@ app.post('/generate-excel', async (req, res) => {
 
     row = 3;
 
-    // Invoice Title - taller row
-    ws.getRow(3).height = 35;
+    // Quote Title - taller row
+    ws.getRow(3).height = 40; // Increased
     ws.mergeCells(`A${row}:D${row}`);
-    ws.getCell(`A${row}`).value = 'INVOICE';
+    ws.getCell(`A${row}`).value = 'QUOTE';
     ws.getCell(`A${row}`).font = { ...headerFont, size: 15 };
     ws.getCell(`A${row}`).alignment = { horizontal: 'center', vertical: 'middle' };
     row++;
 
     // Customer & Invoice Meta (modified for better text handling)
+    ws.getRow(row).height = 28; // Increased
     ws.getCell(`A${row}`).value = 'Bill To:';
     ws.getCell(`A${row}`).font = subHeaderFont;
     ws.getCell(`A${row}`).alignment = { horizontal: 'left' };
@@ -103,6 +105,7 @@ app.post('/generate-excel', async (req, res) => {
     row++;
 
     // Date on separate row
+    ws.getRow(row).height = 28; // Increased
     ws.getCell(`A${row}`).value = 'Date:';
     ws.getCell(`A${row}`).font = subHeaderFont;
     ws.mergeCells(`B${row}:D${row}`);
@@ -110,6 +113,7 @@ app.post('/generate-excel', async (req, res) => {
     ws.getCell(`B${row}`).font = normalFont;
     row++;
 
+    ws.getRow(row).height = 32; // Increased for address
     ws.getCell(`A${row}`).value = 'Address:';
     ws.getCell(`A${row}`).font = subHeaderFont;
     ws.getCell(`A${row}`).alignment = { horizontal: 'left' };
@@ -119,6 +123,7 @@ app.post('/generate-excel', async (req, res) => {
     ws.getCell(`B${row}`).alignment = { horizontal: 'left', wrapText: true };
     row++;
 
+    ws.getRow(row).height = 28; // Increased
     ws.getCell(`A${row}`).value = 'WhatsApp:';
     ws.getCell(`A${row}`).font = subHeaderFont;
     ws.mergeCells(`B${row}:D${row}`);
@@ -129,19 +134,20 @@ app.post('/generate-excel', async (req, res) => {
     row++; // Blank row
 
     // Table Header
+    ws.getRow(row).height = 30; // Increased
     ws.getRow(row).values = ['Product', 'Qty', 'Unit Price (₹)', 'Amount (₹)'];
     ws.getRow(row).font = { ...subHeaderFont, color: { argb: 'FF008080' } };
     ws.getRow(row).alignment = { horizontal: 'center', vertical: 'middle' };
+    ws.getCell(`A${row}`).alignment = { horizontal: 'left', vertical: 'middle' }; // Product header left/middle
     ws.getRow(row).border = {
       bottom: { style: 'thin', color: { argb: 'FF008080' } }
     };
-    ws.getRow(row).height = 25;
     row++;
 
     // Table Body
     let tableStartRow = row;
     items.forEach(item => {
-      ws.getRow(row).height = 22;
+      ws.getRow(row).height = 28; // Increased
       ws.getRow(row).values = [
         truncate(item.name, 60),
         item.qty,
@@ -150,7 +156,7 @@ app.post('/generate-excel', async (req, res) => {
       ];
       ws.getRow(row).font = normalFont;
       ws.getRow(row).alignment = { vertical: 'middle', horizontal: 'center' };
-      // Remove the special alignment for column A since we want everything centered
+      ws.getCell(`A${row}`).alignment = { horizontal: 'left', vertical: 'middle' }; // Product cell left/middle
       // Format Unit Price and Amount as currency
       ws.getCell(`C${row}`).numFmt = '"₹"#,##0.00';
       ws.getCell(`D${row}`).numFmt = '"₹"#,##0.00';
@@ -163,6 +169,7 @@ app.post('/generate-excel', async (req, res) => {
     };
 
     // Only show TOTAL (no subtotal)
+    ws.getRow(row).height = 30; // Increased
     ws.mergeCells(`A${row}:C${row}`);
     ws.getCell(`A${row}`).value = 'TOTAL';
     ws.getCell(`A${row}`).alignment = { horizontal: 'right' };
@@ -171,11 +178,10 @@ app.post('/generate-excel', async (req, res) => {
     ws.getCell(`D${row}`).numFmt = '"₹"#,##0.00'; // Format as currency
     ws.getCell(`D${row}`).font = { ...headerFont, size: 13 };
     ws.getCell(`D${row}`).alignment = { horizontal: 'center' };
-    ws.getRow(row).height = 25;
     row += 2;
 
     // Thank you note - taller row
-    ws.getRow(row).height = 30;
+    ws.getRow(row).height = 36; // Increased
     ws.mergeCells(`A${row}:D${row}`);
     ws.getCell(`A${row}`).value = 'Thank you for your business!';
     ws.getCell(`A${row}`).font = { ...normalFont, italic: true, color: { argb: 'FF008080' } };

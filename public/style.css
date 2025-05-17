@@ -53,37 +53,21 @@
             line-height: 1.6;
             padding: 20px;
             display: flex;
-            flex-direction: column; /* Stack header and container vertically */
-            justify-content: flex-start; /* Align to start */
-            align-items: center; /* Center children horizontally */
+            flex-direction: column; /* Add this */
+            justify-content: flex-start; /* Change from center to flex-start */
+            align-items: center; /* Center all children horizontally */
             min-height: 100vh;
             width: 100%;
             overflow-x: hidden; 
         }
 
-        .app-header {
-            display: flex;
-            justify-content: center; /* Center the logo */
-            align-items: center;
-            margin-bottom: 20px; /* Space below the logo */
-            width: 100%; 
-        }
-
-        #companyLogo {
-            height: 80px; /* Increased logo size */
-            width: auto; 
-        }
-
         .container {
             max-width: 550px; 
-            margin-left: auto;
-            margin-right: auto;
-            margin-bottom: 20px;
+            margin: 20px auto;
             background: var(--card-background-color);
             border-radius: 12px; 
             box-shadow: var(--shadow);
             padding: 25px; 
-            padding-top: 0; /* Remove top padding so header and container connect */
             display: flex;
             flex-direction: column;
             width: 100%;
@@ -98,32 +82,13 @@
                 transform: translateY(0);
             }
         }
-        .page-title-header {
-            text-align: center;
-            margin-bottom: 0; /* Remove bottom margin to connect with next section */
-            padding: 18px 0;
-            background-color: var(--primary-color); /* Main theme color */
-            border-radius: 8px 8px 0 0; /* Only round top corners */
-            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-            /* Connect both left and right ends to the container */
-            margin-left: -25px;
-            margin-right: -25px;
-            width: calc(100% + 50px);
-            /* If you ever change .container padding, adjust these values accordingly */
-        }
-        .page-title-header h1 {
-            color: #fff;
-            font-size: 2.1rem;
-            font-weight: 700;
-            margin-bottom: 0;
-            letter-spacing: 1px;
-        }
 
         h1 {
             color: var(--heading-color);
-            font-size: 1.8rem; /* Decreased heading size for inside the box */
+            font-size: 2.2rem;
+            text-align: center;
+            margin-bottom: 25px;
             font-weight: 700;
-            margin-bottom: 0; /* Remove default margin as padding is on parent */
         }
 
         h2 {
@@ -644,7 +609,6 @@
             transform: translateX(100%);
             transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
             min-width: 280px;
-            role: "alert"; 
         }
 
         .toast.show {
@@ -713,21 +677,10 @@
                 font-size: 1.8rem; 
                 margin-bottom: 20px;
             }
-            .app-header {
-                max-width: 95%;
-            }
-            .page-title-header {
-                max-width: 100%; /* Allow title header to use full width of container */
-            }
         }
 
         @media (max-width: 480px) {
             body { padding: 10px; }
-            .app-header {
-                max-width: 100%;
-                 padding-left: 15px;
-                 padding-right: 15px;
-            }
             .container {
                 width: 100%; 
                 padding: 15px; 
@@ -863,83 +816,17 @@
             .toast-container { top: 10px; right: 10px; width: calc(100% - 20px); }
             .toast { min-width: unset; width: 100%;}
         }
-    </style>
-</head>
-<body>
-    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 
-    <header class="app-header">
-        <img src="/Project-Hermas-logo.svg" alt="Company Logo" id="companyLogo" data-ai-hint="company logo">
-    </header>
+        .app-header {
+            display: flex;
+            justify-content: center; /* Center the logo */
+            align-items: center;
+            margin-bottom: 20px; /* Space below the logo */
+            width: 100%;
+        }
 
-    <div class="container" id="mainContainer">
-        <div class="page-title-header">
-             <h1>Purchase Order</h1>
-        </div>
-
-        <h2><i class="fas fa-user-circle"></i>Customer Information</h2>
-        <div class="input-group">
-            <!-- <label for="custName">Your name</label> -->
-            <input type="text" id="custName" placeholder="Customer Name" required aria-describedby="custNameError">
-            <span id="custNameError" class="sr-only error-message"></span>
-        </div>
-         <div class="input-group">
-            <!-- <label for="custAddress">Address</label> -->
-            <input type="text" id="custAddress" placeholder="Delivery Address" required aria-describedby="custAddressError">
-            <span id="custAddressError" class="sr-only error-message"></span>
-        </div>
-         <div class="input-group">
-             <!-- <label for="custPhone">Your Whatsapp Number</label> -->
-             <input type="tel" id="custPhone" placeholder="WhatsApp Number" required aria-describedby="custPhoneError">
-             <span id="custPhoneError" class="sr-only error-message"></span>
-        </div>
-
-        <h2><i class="fas fa-pills"></i>Our Products</h2>
-        <div id="productGroups">
-            <p role="status" aria-live="polite">Loading products...</p>
-        </div>
-
-        <div class="order-summary" id="orderSummaryCard"> 
-            <div class="order-summary-header">
-                <div class="title">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span>Your Cart</span>
-                </div>
-                <div class="description" id="orderSummaryDescription" style="display: none;">Review items in your order.</div>
-            </div>
-            <div class="order-summary-content">
-                <div class="empty-cart-message" id="emptyCartMessage"> 
-                    <i class="fas fa-cart-plus"></i>
-                    <p>Your Cart is Empty</p>
-                    <span>Add some products to see them here.</span>
-                </div>
-                <div class="table-responsive-wrapper" id="cartTableWrapper" style="display: none;"> 
-                    <table class="cart-table-modern" aria-label="Shopping Cart Items">
-                        <thead>
-                            <tr>
-                                <th scope="col">Product</th>
-                                <th scope="col">Qty</th>
-                                <th scope="col">Unit Price</th>
-                                <th scope="col">Subtotal</th>
-                                <th scope="col">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="cartTableBody">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="total-section">
-            <p class="total-amount" aria-live="polite">Total: ₹<span id="totalAmount">0.00</span></p>
-            <button id="downloadExcelButton">
-                <i class="fas fa-file-excel" aria-hidden="true"></i> Download Excel Order
-            </button>
-        </div>
-    </div>
-
-    <script src="products.js"></script>
-    <script src="script.js"></script>
-</body>
-</html>
+        #companyLogo {
+            height: 80px; /* Increased logo size */
+            width: auto;
+            display: block;
+        }

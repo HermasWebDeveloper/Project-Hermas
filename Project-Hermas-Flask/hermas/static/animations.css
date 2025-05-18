@@ -1,0 +1,84 @@
+/* Fade in and slide up animation */
+@keyframes fadeInSlideUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Shake input animation */
+@keyframes shakeInput {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-4px); }
+    40%, 80% { transform: translateX(4px); }
+}
+
+/* Product item reveal animation */
+@keyframes productItemReveal {
+    from {
+        opacity: 0;
+        transform: translateY(15px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+.animated-product {
+    opacity: 0; 
+    transform: translateY(15px) scale(0.98);
+}
+.group.open .animated-product {
+    animation: productItemReveal 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+.group.open .animated-product:nth-child(1) { animation-delay: 0.05s; }
+.group.open .animated-product:nth-child(2) { animation-delay: 0.10s; }
+.group.open .animated-product:nth-child(3) { animation-delay: 0.15s; }
+.group.open .animated-product:nth-child(4) { animation-delay: 0.20s; }
+.group.open .animated-product:nth-child(5) { animation-delay: 0.25s; }
+
+/* Bounce icon animation */
+@keyframes bounceIcon {
+    0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+    40% {transform: translateY(-10px);}
+    60% {transform: translateY(-5px);}
+}
+
+/* Cart item slide in animation */
+@keyframes cartItemSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+.animated-cart-item {
+    animation: cartItemSlideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Shake element animation */
+@keyframes shakeElement {
+    0%, 100% { transform: translateX(0); }
+    15% { transform: translateX(-5px); }
+    30% { transform: translateX(5px); }
+    45% { transform: translateX(-4px); }
+    60% { transform: translateX(4px); }
+    75% { transform: translateX(-2px); }
+    90% { transform: translateX(2px); }
+}
+.shake-it {
+    animation: shakeElement 0.48s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Pop element animation */
+@keyframes popElement {
+    0% { transform: scale(1);}
+    50% { transform: scale(1.08);}
+    100% { transform: scale(1);}
+}
+.pop-it {
+    animation: popElement 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
